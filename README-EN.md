@@ -444,7 +444,7 @@ python app.py
 
 > Note 2: Data scraping needs to be performed as a separate operation. Please refer to the instructions in section 5.3.
 
-Visit http://localhost:5000 to use the complete system
+Visit http://localhost:5002 to use the complete system
 
 #### 6.2 Launch Individual Agents
 

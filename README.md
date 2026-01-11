@@ -449,7 +449,7 @@ python app.py
 
 > 注2：数据爬取需要单独操作，见6.3指引
 
-访问 http://localhost:5000 即可使用完整系统
+访问 http://localhost:5002 即可使用完整系统
 
 #### 6.2 单独启动某个Agent
 

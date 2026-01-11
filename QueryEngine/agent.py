@@ -153,6 +153,47 @@ class DeepSearchAgent:
         logger.info(f"开始深度研究: {query}")
         logger.info(f"{'='*60}")
         
+        # [FAST TEST] 快速测试模式
+        if self.config.FAST_TEST_MODE:
+            logger.warning("[FAST TEST] QueryEngine 进入快速测试模式")
+            
+            search_verification = "未执行真实搜索验证"
+            if self.config.TEST_SEARCH_AND_ANALYSIS:
+                logger.info("[FAST TEST] 正在验证搜索工具连通性...")
+                try:
+                    # 尝试执行一次基础搜索，只取1条结果，验证工具链是否正常
+                    test_response = self.execute_search_tool("basic_search_news", query, max_results=1)
+                    if test_response and test_response.results:
+                        search_verification = f"✅ 搜索工具验证成功 (找到 {len(test_response.results)} 条结果)"
+                        logger.info(search_verification)
+                    else:
+                        search_verification = "⚠️ 搜索工具验证失败: 返回结果为空"
+                        logger.warning(search_verification)
+                except Exception as e:
+                    search_verification = f"❌ 搜索工具验证出错: {str(e)}"
+                    logger.error(search_verification)
+
+            mock_report = f"""# QueryEngine 测试报告
+            
+这是一个来自 QueryEngine 的模拟测试响应。
+当前处于 FAST_TEST_MODE。
+
+🔍 **功能验证状态**:
+{search_verification}
+
+收到查询: {query}
+生成时间: {datetime.now()}
+"""
+            # 更新简单的状态以确保流程完整性
+            self.state.query = query
+            self.state.report_title = "QueryEngine Test Report"
+            self.state.final_report = mock_report
+            self.state.mark_completed()
+            
+            if save_report:
+                self._save_report(mock_report)
+            return mock_report
+        
         try:
             # Step 1: 生成报告结构
             self._generate_report_structure(query)

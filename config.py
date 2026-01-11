@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     """
     # ================== Flask 服务器配置 ====================
     HOST: str = Field("0.0.0.0", description="BETTAFISH 主机地址，例如 0.0.0.0 或 127.0.0.1")
-    PORT: int = Field(5000, description="Flask服务器端口号，默认5000")
+    PORT: int = Field(5002, description="Flask服务器端口号，默认5002")
 
     # ====================== 数据库配置 ======================
     DB_DIALECT: str = Field("postgresql", description="数据库类型，可选 mysql 或 postgresql；请与其他连接信息同时配置")
@@ -106,6 +106,10 @@ class Settings(BaseSettings):
     MAX_PARAGRAPHS: int = Field(6, description="最大段落数")
     SEARCH_TIMEOUT: int = Field(240, description="单次搜索请求超时")
     MAX_CONTENT_LENGTH: int = Field(500000, description="搜索最大内容长度")
+    
+    # ================== 测试配置 ====================
+    FAST_TEST_MODE: bool = Field(False, description="是否开启快速测试模式（跳过实际搜索和LLM调用，仅返回模拟数据）")
+    TEST_SEARCH_AND_ANALYSIS: bool = Field(False, description="在测试模式下是否真实执行一次搜索和分析以验证功能")
     
     model_config = ConfigDict(
         env_file=ENV_FILE,

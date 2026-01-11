@@ -13,6 +13,7 @@ from loguru import logger
 from .base_node import BaseNode
 from ..prompts import SYSTEM_PROMPT_TEMPLATE_SELECTION
 from ..utils.json_parser import RobustJSONParser, JSONParseError
+from config import settings
 
 
 class TemplateSelectionNode(BaseNode):
@@ -54,6 +55,28 @@ class TemplateSelectionNode(BaseNode):
             选择的模板信息，包含名称、内容与选择理由
         """
         logger.info("开始模板选择...")
+        
+        # 快速测试模式：强制使用测试模板
+        if settings.FAST_TEST_MODE:
+            logger.warning("[FAST TEST] 开启快速测试模式，强制使用 FastTestTemplate")
+            test_template_name = "FastTestTemplate"
+            test_template_path = os.path.join(self.template_dir, f"{test_template_name}.md")
+            if os.path.exists(test_template_path):
+                with open(test_template_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                return {
+                    'template_name': test_template_name,
+                    'template_content': content,
+                    'selection_reason': '快速测试模式强制指定'
+                }
+            else:
+                logger.error(f"测试模板不存在: {test_template_path}")
+                # 模板缺失时的回退硬编码模板
+                return {
+                    'template_name': 'FastTestTemplate_Fallback',
+                    'template_content': '# 快速测试报告 (Fallback)\n\n这是一个内置的快速测试报告模板，因为未找到 FastTestTemplate.md 文件。',
+                    'selection_reason': '快速测试模式强制指定 (Fallback)'
+                }
         
         query = input_data.get('query', '')
         reports = input_data.get('reports', [])

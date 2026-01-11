@@ -81,6 +81,39 @@ def with_retry(config: RetryConfig = None):
                     
                 except config.retry_on_exceptions as e:
                     last_exception = e
+                    error_str = str(e)
+
+                    # 检查是否为不可重试的错误（如内容安全拦截）
+                    if "inappropriate content" in error_str or "Output data may contain inappropriate content" in error_str:
+                        logger.warning(f"函数 {func.__name__} 遇到内容安全拦截: {error_str}")
+                        
+                        if attempt < config.max_retries:
+                            logger.info("尝试追加安全提示并重试...")
+                            # 尝试修改输入参数，追加安全提示
+                            try:
+                                safety_notice = "\n\n【系统安全提示：请务必确保生成的内容客观、中立、合规，严禁包含任何色情、暴力、政治敏感或其他不当内容。请对输出进行脱敏处理。】"
+                                
+                                # 修改位置参数
+                                new_args = list(args)
+                                for i, arg in enumerate(new_args):
+                                    if isinstance(arg, str) and len(arg) > 5 and safety_notice not in arg:
+                                        new_args[i] = arg + safety_notice
+                                args = tuple(new_args)
+                                
+                                # 修改关键字参数
+                                for key, value in kwargs.items():
+                                    if isinstance(value, str) and len(value) > 5 and safety_notice not in value:
+                                        kwargs[key] = value + safety_notice
+                                        
+                                # 短暂等待后重试
+                                time.sleep(1.0)
+                                continue
+                            except Exception as sanitize_err:
+                                logger.error(f"尝试修复参数失败: {sanitize_err}")
+                                raise e
+                        else:
+                            logger.error(f"函数 {func.__name__} 遇到内容安全拦截，且已达到最大重试次数")
+                            raise e
                     
                     if attempt == config.max_retries:
                         # 最后一次尝试也失败了

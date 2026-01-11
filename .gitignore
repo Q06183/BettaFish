@@ -345,3 +345,4 @@ media_engine_streamlit_reports/
 query_engine_streamlit_reports/
 final_reports/
 forward_prs.sh
+db_data/

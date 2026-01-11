@@ -2392,6 +2392,31 @@
                 ]
             },
             {
+                title: '快速测试模式',
+                subtitle: '用于快速验证流程，跳过耗时的LLM和搜索步骤',
+                fields: [
+                    {
+                        key: 'FAST_TEST_MODE',
+                        label: '开启快速测试',
+                        type: 'select',
+                        options: [
+                            { value: 'False', label: '关闭' },
+                            { value: 'True', label: '开启' }
+                        ]
+                    },
+                    {
+                        key: 'TEST_SEARCH_AND_ANALYSIS',
+                        label: '测试搜索与分析',
+                        type: 'select',
+                        condition: { key: 'FAST_TEST_MODE', value: 'True' },
+                        options: [
+                            { value: 'False', label: '关闭' },
+                            { value: 'True', label: '开启' }
+                        ]
+                    }
+                ]
+            },
+            {
                 title: '本地构建GraphRAG（测试）',
                 subtitle: '统一构建，以章节为单位查询，默认关闭',
                 fields: [
