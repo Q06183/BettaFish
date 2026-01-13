@@ -136,4 +136,5 @@ def reload_settings() -> Settings:
     
     global settings
     settings = Settings()
+    logger.info(f"Global settings reloaded: FAST_TEST_MODE={settings.FAST_TEST_MODE}, TEST_SEARCH_AND_ANALYSIS={settings.TEST_SEARCH_AND_ANALYSIS}")
     return settings

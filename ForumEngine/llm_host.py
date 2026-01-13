@@ -260,3 +260,18 @@ def get_forum_host() -> ForumHost:
 def generate_host_speech(forum_logs: List[str]) -> Optional[str]:
     """生成主持人发言的便捷函数"""
     return get_forum_host().generate_host_speech(forum_logs)
+
+
+def reload_forum_host_config():
+    """重新加载论坛主持人配置（重置全局实例）"""
+    global _host_instance
+    _host_instance = None
+    
+    # 重新获取最新的配置对象
+    import sys
+    if 'config' in sys.modules:
+        global settings
+        settings = sys.modules['config'].settings
+        
+    print("ForumHost: 配置已重置，下次调用将使用新配置") # Keep print for console output
+    # Also log it if possible, but print is fine for now as it goes to console

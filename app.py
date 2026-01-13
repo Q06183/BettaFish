@@ -29,6 +29,7 @@ from utils.knowledge_logger import (
     compact_records as _compact_records,
     init_knowledge_log,
 )
+from ForumEngine.llm_host import reload_forum_host_config
 
 # 导入ReportEngine
 try:
@@ -145,8 +146,8 @@ def read_config_values():
     """Return the current configuration values that are exposed to the frontend."""
     try:
         # 重新加载配置以获取最新的 Settings 实例
-        from config import reload_settings, settings
-        reload_settings()
+        from config import reload_settings
+        settings = reload_settings()
         
         values = {}
         for key in CONFIG_KEYS:
@@ -1221,7 +1222,24 @@ def update_config():
 
     try:
         write_config_values(updates)
+        config_mod = _load_config_module()  # 重新加载 config.py，更新当前进程的 settings
+        
+        # 获取新配置中的测试标志
+        current_settings = getattr(config_mod, 'settings', None)
+        fast_test = getattr(current_settings, 'FAST_TEST_MODE', 'Unknown')
+        test_search = getattr(current_settings, 'TEST_SEARCH_AND_ANALYSIS', 'Unknown')
+        
+        logger.info(f"Main Flask app configuration reloaded: FAST_TEST_MODE={fast_test}, TEST_SEARCH_AND_ANALYSIS={test_search}")
+        reload_forum_host_config()  # 重新加载 ForumHost 的配置
+        logger.info("ForumHost configuration reloaded")
+        
+        if REPORT_ENGINE_AVAILABLE:
+            initialize_report_engine()  # 重新初始化 ReportEngine
+            logger.info("ReportEngine configuration reloaded")
+
         updated_config = read_config_values()
+        
+        logger.info("配置已更新，ForumEngine及Streamlit子应用将在下次运行时使用新配置")
         return jsonify({'success': True, 'config': updated_config})
     except Exception as exc:
         logger.exception("更新配置失败")

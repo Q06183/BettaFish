@@ -28,12 +28,16 @@ except locale.Error:
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from InsightEngine import DeepSearchAgent, Settings
-from config import settings
+from config import settings, reload_settings
 from utils.github_issues import error_with_issue_link
 
 
 def main():
     """主函数"""
+    # 每次运行时重新加载配置，确保能感知到Web界面的修改
+    settings = reload_settings()
+    logger.info(f"Insight Engine configuration reloaded: FAST_TEST_MODE={settings.FAST_TEST_MODE}, TEST_SEARCH_AND_ANALYSIS={settings.TEST_SEARCH_AND_ANALYSIS}")
+
     st.set_page_config(
         page_title="Insight Agent",
         page_icon="",
