@@ -249,6 +249,7 @@ class ReportAgent:
         os.makedirs(self.config.DOCUMENT_IR_OUTPUT_DIR, exist_ok=True)
         
         logger.info("Report Agent已初始化")
+        logger.info(f"ReportEngine Config: FAST_TEST_MODE={getattr(self.config, 'FAST_TEST_MODE', False)}")
         logger.info(f"使用LLM: {self.llm_client.get_model_info()}")
         
     def _setup_logging(self):
@@ -488,6 +489,101 @@ class ReportAgent:
         logger.info(f"开始生成报告 {report_id}: {query}")
         logger.info(f"输入数据 - 报告数量: {len(reports)}, 论坛日志长度: {len(str(forum_logs))}")
         emit('stage', {'stage': 'agent_start', 'report_id': report_id, 'query': query})
+
+        # [FAST TEST MODE]
+        if getattr(self.config, 'FAST_TEST_MODE', False):
+            logger.info("[FAST TEST] ReportEngine 进入快速测试模式")
+            emit('stage', {'stage': 'fast_test_mode', 'message': '正在使用快速测试模式生成报告'})
+            
+            # 1. 简单的报告内容拼接
+            # normalized_reports 已经在前面计算过了 (line 477)
+            
+            # [FAST TEST] 验证 LLM 调用
+            test_llm_result = "未启用 TEST_SEARCH_AND_ANALYSIS，跳过 LLM 测试。"
+            if getattr(self.config, 'TEST_SEARCH_AND_ANALYSIS', False):
+                try:
+                    logger.info("[FAST TEST] 测试 LLM 调用...")
+                    emit('stage', {'stage': 'test_llm_start', 'message': '正在测试 LLM 连接...'})
+                    llm_response = self.llm_client.invoke(
+                        system_prompt="You are a testing assistant.",
+                        user_prompt=f"Please confirm connectivity and summarize this query in one short sentence: {query}"
+                    )
+                    test_llm_result = f"LLM 连接成功。响应: {llm_response}"
+                    logger.info(f"[FAST TEST] LLM 调用成功: {llm_response}")
+                    emit('stage', {'stage': 'test_llm_success', 'message': 'LLM 连接测试成功'})
+                except Exception as e:
+                    logger.error(f"[FAST TEST] LLM 调用失败: {e}")
+                    test_llm_result = f"LLM 调用失败: {e}"
+                    emit('stage', {'stage': 'test_llm_failed', 'message': f'LLM 连接测试失败: {e}'})
+            
+            mock_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>快速测试报告: {query}</title>
+                <style>
+                    body {{ font-family: sans-serif; padding: 20px; line-height: 1.6; }}
+                    .engine-report {{ border: 1px solid #ddd; margin: 20px 0; padding: 15px; border-radius: 5px; background: #f9f9f9; }}
+                    .llm-test {{ border: 1px solid #b8daff; margin: 20px 0; padding: 15px; border-radius: 5px; background: #e8f4f8; color: #004085; }}
+                    h1, h2 {{ color: #2c3e50; }}
+                    pre {{ white-space: pre-wrap; word-wrap: break-word; background: #eee; padding: 10px; border-radius: 3px; }}
+                </style>
+            </head>
+            <body>
+                <h1>快速测试报告: {query}</h1>
+                <p>生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                <p><strong>注意：</strong> 这是快速测试模式生成的预览报告，未经过深度分析。</p>
+                
+                <div class="llm-test">
+                    <h2>LLM Connectivity Test</h2>
+                    <p>{test_llm_result}</p>
+                </div>
+
+                <div class="engine-report">
+                    <h2>Query Engine Report</h2>
+                    <pre>{normalized_reports.get('query_engine', '无数据')}</pre>
+                </div>
+                
+                <div class="engine-report">
+                    <h2>Media Engine Report</h2>
+                    <pre>{normalized_reports.get('media_engine', '无数据')}</pre>
+                </div>
+                
+                <div class="engine-report">
+                    <h2>Insight Engine Report</h2>
+                    <pre>{normalized_reports.get('insight_engine', '无数据')}</pre>
+                </div>
+
+                <div class="engine-report">
+                    <h2>Forum Logs</h2>
+                    <pre>{forum_logs}</pre>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # 2. 构造虚拟的 Document IR
+            mock_ir = {
+                "title": f"快速测试报告: {query}",
+                "chapters": [],
+                "meta": {"fast_test": True}
+            }
+            
+            # 3. 保存报告
+            self.state.html_content = mock_html
+            self.state.mark_completed()
+            
+            saved_files = {}
+            if save_report:
+                saved_files = self._save_report(mock_html, mock_ir, report_id)
+                emit('stage', {'stage': 'report_saved', 'files': saved_files})
+            
+            logger.info("[FAST TEST] 报告生成完成 (Mock)")
+            return {
+                'html_content': mock_html,
+                'report_id': report_id,
+                **saved_files
+            }
 
         try:
             template_result = self._select_template(query, reports, forum_logs, custom_template)
@@ -1612,6 +1708,19 @@ class ReportAgent:
         Returns:
             检查结果字典，包含文件计数、缺失列表、最新文件路径等
         """
+        # [FAST TEST MODE]
+        if getattr(self.config, 'FAST_TEST_MODE', False):
+            logger.info("[FAST TEST] ReportEngine 跳过输入文件检查")
+            return {
+                'ready': True,
+                'baseline_counts': {},
+                'current_counts': {},
+                'new_files_found': {},
+                'missing_files': [],
+                'files_found': ['[FAST TEST] Mock Files'],
+                'latest_files': {}
+            }
+
         # 检查各个报告目录的文件数量变化
         directories = {
             'insight': insight_dir,

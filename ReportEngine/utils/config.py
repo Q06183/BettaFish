@@ -75,6 +75,10 @@ class Settings(BaseSettings):
         default=3, description="GraphRAG每章节查询次数上限"
     )
 
+    # 快速测试模式配置
+    FAST_TEST_MODE: bool = Field(False, description="是否开启快速测试模式（不调用LLM，使用Mock数据）")
+    TEST_SEARCH_AND_ANALYSIS: bool = Field(False, description="是否开启搜索和分析的测试模式")
+
     class Config:
         """Pydantic配置：允许从.env读取并兼容大小写"""
         env_file = ".env"

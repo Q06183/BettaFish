@@ -78,6 +78,10 @@ class Settings(BaseSettings):
     ANSPIRE_BASE_URL: Optional[str] = Field("https://plugin.anspire.cn/api/ntsearch/search", description="Anspire AI 搜索BaseUrl")
     ANSPIRE_API_KEY: Optional[str] = Field(None, description="Anspire AI Search API（申请地址：https://open.anspire.cn/）API密钥，用于Anspire搜索")
 
+    # 测试配置
+    FAST_TEST_MODE: bool = Field(False, description="是否开启快速测试模式")
+    TEST_SEARCH_AND_ANALYSIS: bool = Field(False, description="在测试模式下是否真实执行一次搜索和分析")
+
     class Config:
         env_file = ENV_FILE
         env_prefix = ""

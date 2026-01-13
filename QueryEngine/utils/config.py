@@ -45,6 +45,10 @@ class Settings(BaseSettings):
     OUTPUT_DIR: str = Field("reports", description="输出目录")
     SAVE_INTERMEDIATE_STATES: bool = Field(True, description="是否保存中间状态")
     
+    # 测试配置
+    FAST_TEST_MODE: bool = Field(False, description="是否开启快速测试模式")
+    TEST_SEARCH_AND_ANALYSIS: bool = Field(False, description="在测试模式下是否真实执行一次搜索和分析")
+    
     class Config:
         env_file = ENV_FILE
         env_prefix = ""

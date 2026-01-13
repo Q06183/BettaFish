@@ -123,6 +123,8 @@ def main():
                 MAX_REFLECTIONS=max_reflections,
                 SEARCH_CONTENT_MAX_LENGTH=max_content_length,
                 OUTPUT_DIR="media_engine_streamlit_reports",
+                FAST_TEST_MODE=settings.FAST_TEST_MODE,
+                TEST_SEARCH_AND_ANALYSIS=settings.TEST_SEARCH_AND_ANALYSIS
             )
         elif settings.SEARCH_TOOL_TYPE == "AnspireAPI":
             if not ansire_key:
@@ -139,6 +141,8 @@ def main():
                 MAX_REFLECTIONS=max_reflections,
                 SEARCH_CONTENT_MAX_LENGTH=max_content_length,
                 OUTPUT_DIR="media_engine_streamlit_reports",
+                FAST_TEST_MODE=settings.FAST_TEST_MODE,
+                TEST_SEARCH_AND_ANALYSIS=settings.TEST_SEARCH_AND_ANALYSIS
             )
         else:
             st.error(f"未知的搜索工具类型: {settings.SEARCH_TOOL_TYPE}")
@@ -168,6 +172,62 @@ def execute_research(query: str, config: Settings):
 
         progress_bar.progress(10)
 
+        # [FAST TEST] 快速测试模式逻辑
+        if config.FAST_TEST_MODE:
+            logger.warning("[FAST TEST] MediaEngine (Streamlit) 进入快速测试模式")
+            status_text.text("正在执行快速测试模式...")
+            
+            search_verification = "未执行真实搜索验证"
+            if config.TEST_SEARCH_AND_ANALYSIS:
+                logger.info("[FAST TEST] 正在验证搜索工具连通性...")
+                status_text.text("正在验证搜索工具连通性...")
+                try:
+                    # 尝试执行一次综合搜索，只取1条结果
+                    test_response = agent.execute_search_tool("comprehensive_search", query, max_results=1)
+                    # 兼容不同agent的返回格式
+                    if hasattr(test_response, 'webpages') and test_response.webpages:
+                        search_verification = f"✅ 搜索工具验证成功 (找到 {len(test_response.webpages)} 条结果)"
+                        logger.info(search_verification)
+                    elif hasattr(test_response, 'results') and test_response.results: # Anspire可能返回results
+                        search_verification = f"✅ 搜索工具验证成功 (找到 {len(test_response.results)} 条结果)"
+                        logger.info(search_verification)
+                    else:
+                        search_verification = "⚠️ 搜索工具验证失败: 返回结果为空"
+                        logger.warning(search_verification)
+                except Exception as e:
+                    search_verification = f"❌ 搜索工具验证出错: {str(e)}"
+                    logger.error(search_verification)
+
+            mock_report = f"""# MediaEngine 测试报告
+            
+这是一个来自 MediaEngine 的模拟测试响应。
+当前处于 FAST_TEST_MODE。
+
+🔍 **功能验证状态**:
+{search_verification}
+
+收到查询: {query}
+生成时间: {datetime.now()}
+"""
+            
+            # 更新简单的状态以确保流程完整性
+            agent.state.query = query
+            agent.state.report_title = "MediaEngine Test Report"
+            agent.state.final_report = mock_report
+            agent.state.mark_completed()
+            
+            # 保存报告
+            agent._save_report(mock_report)
+            
+            progress_bar.progress(100)
+            status_text.text("快速测试完成！")
+            logger.info("快速测试完成！")
+            
+            # 显示结果
+            display_results(agent, mock_report)
+            return
+
+        # 正常流程
         # 生成报告结构
         status_text.text("正在生成报告结构...")
         agent._generate_report_structure(query)

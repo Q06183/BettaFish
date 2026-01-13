@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     MAX_HIGH_CONFIDENCE_SENTIMENT_RESULTS: int = Field(0, description="高置信度情感分析最大数")
     OUTPUT_DIR: str = Field("reports", description="输出路径")
     SAVE_INTERMEDIATE_STATES: bool = Field(True, description="是否保存中间状态")
+    
+    # 测试配置
+    FAST_TEST_MODE: bool = Field(False, description="是否开启快速测试模式")
+    TEST_SEARCH_AND_ANALYSIS: bool = Field(False, description="在测试模式下是否真实执行一次搜索和分析")
 
     class Config:
         env_file = ".env"

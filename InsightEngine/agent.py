@@ -50,6 +50,8 @@ class DeepSearchAgent:
         """
         self.config = config or settings
 
+        logger.info(f"Insight Agent 配置状态: FAST_TEST_MODE={self.config.FAST_TEST_MODE}, TEST_SEARCH_AND_ANALYSIS={self.config.TEST_SEARCH_AND_ANALYSIS}")
+
         # 初始化LLM客户端
         self.llm_client = self._initialize_llm()
 
@@ -546,15 +548,15 @@ class DeepSearchAgent:
 
             mock_report = f"""# InsightEngine 测试报告
             
-这是一个来自 InsightEngine 的模拟测试响应。
-当前处于 FAST_TEST_MODE。
+                这是一个来自 InsightEngine 的模拟测试响应。
+                当前处于 FAST_TEST_MODE。
 
-🔍 **功能验证状态**:
-{search_verification}
+                🔍 **功能验证状态**:
+                {search_verification}
 
-收到查询: {query}
-生成时间: {datetime.now()}
-"""
+                收到查询: {query}
+                生成时间: {datetime.now()}
+            """
             # 更新简单的状态以确保流程完整性
             self.state.query = query
             self.state.report_title = "InsightEngine Test Report"
@@ -566,6 +568,7 @@ class DeepSearchAgent:
             return mock_report
 
         try:
+            logger.info("\n[步骤 0] 初始化研究...")
             # Step 1: 生成报告结构
             self._generate_report_structure(query)
 
@@ -590,7 +593,6 @@ class DeepSearchAgent:
     def _generate_report_structure(self, query: str):
         """生成报告结构"""
         logger.info(f"\n[步骤 1] 生成报告结构...")
-
         # 创建报告结构节点
         report_structure_node = ReportStructureNode(self.llm_client, query)
 
