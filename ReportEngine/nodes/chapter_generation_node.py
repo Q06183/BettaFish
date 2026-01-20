@@ -315,6 +315,18 @@ class ChapterGenerationNode(BaseNode):
         allow_swot = self._get_chapter_swot_permission(section.chapter_id, context)
         allow_pest = self._get_chapter_pest_permission(section.chapter_id, context)
 
+        # 针对每个引擎的报告进行截断，防止超出 Token 限制 (30k tokens approx 30k-50k chars)
+        # 保守起见，每个报告限制在 8000 字符，总共 24000 字符，加上 prompt 和其他 context 安全
+        max_report_len = 30000
+        
+        def _truncate(text: str, name: str) -> str:
+            if not text:
+                return ""
+            if len(text) > max_report_len:
+                logger.warning(f"[{section.title}] {name} 报告过长({len(text)}字符)，已截断至 {max_report_len} 字符")
+                return text[:max_report_len] + "\n...(truncated)..."
+            return text
+
         payload = {
             "section": {
                 "chapterId": section.chapter_id,
@@ -334,11 +346,11 @@ class ChapterGenerationNode(BaseNode):
                 "templateOverview": context.get("template_overview", {}),
             },
             "reports": {
-                "query_engine": reports.get("query_engine", ""),
-                "media_engine": reports.get("media_engine", ""),
-                "insight_engine": reports.get("insight_engine", ""),
+                "query_engine": _truncate(reports.get("query_engine", ""), "query_engine"),
+                "media_engine": _truncate(reports.get("media_engine", ""), "media_engine"),
+                "insight_engine": _truncate(reports.get("insight_engine", ""), "insight_engine"),
             },
-            "forumLogs": context.get("forum_logs", ""),
+            "forumLogs": _truncate(context.get("forum_logs", ""), "forum_logs"),
             "dataBundles": context.get("data_bundles", []),
             "constraints": {
                 "language": "zh-CN",

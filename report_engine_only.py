@@ -29,7 +29,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 from loguru import logger
-from config import settings as global_settings, Settings
+from config import settings as global_settings
+from ReportEngine.utils.config import settings as report_settings, Settings as ReportSettings
 
 # 全局配置
 VERBOSE = False
@@ -226,7 +227,7 @@ def generate_report(
     reports: list[str],
     query: str,
     pdf_available: bool,
-    agent_config: Optional[Settings] = None
+    agent_config: Optional[ReportSettings] = None
 ) -> Dict[str, Any]:
     """
     调用Report Engine生成报告
@@ -486,7 +487,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def build_agent_config(args) -> Settings:
+def build_agent_config(args) -> ReportSettings:
     """基于 .env 配置并融合命令行覆盖项生成最终配置"""
     config_overrides: Dict[str, Any] = {}
 
@@ -499,9 +500,9 @@ def build_agent_config(args) -> Settings:
             config_overrides['GRAPHRAG_MAX_QUERIES'] = args.graphrag_max_queries
 
     if not config_overrides:
-        return global_settings
+        return report_settings
 
-    return global_settings.model_copy(update=config_overrides)
+    return report_settings.model_copy(update=config_overrides)
 
 
 def main():
