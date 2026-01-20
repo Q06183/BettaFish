@@ -1176,7 +1176,7 @@ class ReportAgent:
             },
             "data_bundles": [],
             "max_tokens": min(self.config.MAX_CONTENT_LENGTH, 6000),
-            "max_report_len": getattr(self.config, 'MAX_REPORT_LEN', 30000),
+            "max_report_len": self.config.MAX_REPORT_LEN,
             "layout": layout_design or {},
             "template_overview": template_overview or {},
             "chapter_directives": chapter_directives or {},
