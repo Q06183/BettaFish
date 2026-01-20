@@ -316,8 +316,8 @@ class ChapterGenerationNode(BaseNode):
         allow_pest = self._get_chapter_pest_permission(section.chapter_id, context)
 
         # 针对每个引擎的报告进行截断，防止超出 Token 限制 (30k tokens approx 30k-50k chars)
-        # 保守起见，每个报告限制在 8000 字符，总共 24000 字符，加上 prompt 和其他 context 安全
-        max_report_len = 30000
+        # 优先使用 context 中的配置，默认为 30000
+        max_report_len = context.get("max_report_len", 30000)
         
         def _truncate(text: str, name: str) -> str:
             if not text:

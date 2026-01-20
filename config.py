@@ -106,6 +106,7 @@ class Settings(BaseSettings):
     MAX_PARAGRAPHS: int = Field(6, description="最大段落数")
     SEARCH_TIMEOUT: int = Field(240, description="单次搜索请求超时")
     MAX_CONTENT_LENGTH: int = Field(500000, description="搜索最大内容长度")
+    MAX_REPORT_LEN: int = Field(30000, description="单篇子报告最大长度（字符），用于防止上下文溢出")
     
     # ================== 测试配置 ====================
     FAST_TEST_MODE: bool = Field(False, description="是否开启快速测试模式（跳过实际搜索和LLM调用，仅返回模拟数据）")
